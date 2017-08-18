@@ -1,0 +1,24 @@
+apply plugin: 'java-library'
+apply plugin: 'maven'
+
+group = 'com.wattics'
+version = '0.2.0'
+sourceCompatibility = 1.8
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    api 'org.apache.commons:commons-math3:3.6.1'
+    implementation 'com.google.guava:guava:23.0'
+    compile 'com.google.code.gson:gson:1.7.2'
+    compile 'org.apache.httpcomponents:httpclient:4.3.4'
+    testCompile 'junit:junit:4.12'
+}
+
+task fatJar(type: Jar) {
+    baseName = project.name
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
