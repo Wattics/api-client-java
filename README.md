@@ -73,7 +73,7 @@ agent.send(Measurements, config);
 
 ## Handlers for callbacks
 
-After sending the data you may want to check if it was sent correctly. For this you have access to `measurement`  and `response`. You can set different handlers for the callbacks using `add_measurement_sent_handler`. You can set as many handlers as you like.
+After sending the data you may want to check if it was sent correctly. For this you have access to `measurement`  and `httpResponse`. You can set different handlers for the callbacks using `addMeasurementSentHandler`. You can set as many handlers as you like.
 
 Priting to the console and saving to a file.
 
