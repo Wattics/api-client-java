@@ -63,12 +63,12 @@ public class Main {
 You may also want send groups of measurements.
 
 ```java
-List<Object> Measurements = new ArrayList<Object>();
-Measurements.add(simpleMeasurement1);
-Measurements.add(electricityMeasurement1);
-Measurements.add(simpleMeasurement2);
+List<Measurement> measurements = new ArrayList<Measurement>();
+measurements.add(simpleMeasurement1);
+measurements.add(electricityMeasurement1);
+measurements.add(simpleMeasurement2);
 
-agent.send(Measurements, config);
+agent.send(measurements, config);
 ```
 
 ## Handlers for callbacks
