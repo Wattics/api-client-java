@@ -58,4 +58,49 @@ public class Main {
     }
 }
 ```
+## Groups of measurements
 
+You may also want send groups of measurements.
+
+```java
+List<Object> Measurements = new ArrayList<Object>();
+Measurements.add(simpleMeasurement1);
+Measurements.add(electricityMeasurement1);
+Measurements.add(simpleMeasurement2);
+
+agent.send(Measurements, config);
+```
+
+## Handlers for callbacks
+
+After sending the data you may want to check if it was sent correctly. For this you have access to `measurement`  and `response`. You can set different handlers for the callbacks using `add_measurement_sent_handler`. You can set as many handlers as you like.
+
+Priting to the console.
+
+```java
+agent.addMeasurementSentHandler((measurement, httpResponse) -> {
+            System.out.println(measurement);
+            System.out.println(httpResponse);
+        });
+
+
+PrintWriter out = new PrintWriter("results.txt");
+agent.addMeasurementSentHandler((measurement, httpResponse) -> {
+            out.println(measurement);
+            out.println(httpResponse);
+        });
+```
+
+## Parallel Sends
+
+When running `agent.getInstance`, it will spin twice as many as virtual processors as system has available.
+*Ex. If your system is a dual core, and has 4 virtual processors, the gem will spin up 8 parallel send processes for maximum performance.*
+
+In some cases you may want to limit how many processes are created. You can specify this when creating an instance of the agent. `agent.getInstance(number of processors)`
+In case you exceed the maximum limit, it will set for to the default maximum.
+
+```java
+# Limiting send processes to two.
+
+Agent agent = Agent.getInstance(2)
+```
