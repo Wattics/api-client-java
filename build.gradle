@@ -2,7 +2,7 @@ apply plugin: 'java-library'
 apply plugin: 'maven'
 
 group = 'com.wattics'
-version = '0.2.0'
+version = '0.3.0'
 sourceCompatibility = 1.8
 
 repositories {

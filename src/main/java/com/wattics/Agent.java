@@ -59,14 +59,21 @@ public class Agent {
         new Thread(agentThreadGroup, () -> {
             try {
                 while (true) {
-                    Iterator<String> iterator = enqueuedMeasurementsWithConfig.keySet().iterator();
+                    String channelId = null;
+                    boolean hasNext = true;
+                    synchronized (enqueuedMeasurementsWithConfig) {
+                        Iterator<String> iterator = enqueuedMeasurementsWithConfig.keySet().iterator();
+                        hasNext = iterator.hasNext();
+                        if (hasNext) {
+                            channelId = iterator.next();
+                        }
+                    }
 
-                    if (!iterator.hasNext()) {
+                    if (!hasNext) {
                         sleep();
                         continue;
                     }
 
-                    String channelId = iterator.next();
                     // Creates a new list because the returned collection is weak and if you remove all elements
                     // from the multimap it will also remove from the returned collection
                     Collection<MeasurementWithConfig> measurementsWithConfig = newArrayList(enqueuedMeasurementsWithConfig.asMap().get(channelId));
