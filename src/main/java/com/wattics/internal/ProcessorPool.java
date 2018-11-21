@@ -1,6 +1,6 @@
 package com.wattics.internal;
 
-import com.wattics.Agent;
+import com.wattics.CanReportSentMeasurement;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,12 +9,12 @@ import static java.lang.Runtime.getRuntime;
 
 public class ProcessorPool {
     private int MAX_PROCESSORS;
-    private Agent agent;
+    private CanReportSentMeasurement reporter;
     private Map<String, Processor> processors;
     private final ThreadGroup processorThreadGroup;
 
-    public ProcessorPool(Agent agent, int maximumParallelSenders, ThreadGroup agentThreadGroup) {
-        this.agent = agent;
+    public ProcessorPool(CanReportSentMeasurement reporter, int maximumParallelSenders, ThreadGroup agentThreadGroup) {
+        this.reporter = reporter;
         if (maximumParallelSenders > 0) {
             MAX_PROCESSORS = maximumParallelSenders;
         } else {
@@ -42,7 +42,7 @@ public class ProcessorPool {
     }
 
     private Processor spawnNewProcessor() {
-        Processor processor = new Processor(agent);
+        Processor processor = new Processor(reporter);
         new Thread(processorThreadGroup, processor, "Processor-" + processors.size()).start();
         return processor;
     }

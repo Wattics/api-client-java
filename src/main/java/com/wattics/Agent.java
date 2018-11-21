@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Multimaps.synchronizedListMultimap;
 
-public class Agent {
+public class Agent implements CanReportSentMeasurement {
     private static Agent SINGLETON_INSTANCE;
 
     private final ThreadGroup agentThreadGroup;
@@ -74,18 +74,24 @@ public class Agent {
                         continue;
                     }
 
-                    // Creates a new list because the returned collection is weak and if you remove all elements
-                    // from the multimap it will also remove from the returned collection
-                    Collection<MeasurementWithConfig> measurementsWithConfig = newArrayList(enqueuedMeasurementsWithConfig.asMap().get(channelId));
 
-                    Processor processor = processorPool.getProcessor(channelId);
-                    if (processor == null) {
-                        sleep();
-                        continue;
+                    boolean hasProcessor = false;
+
+                    synchronized (enqueuedMeasurementsWithConfig) {
+                        Processor processor = processorPool.getProcessor(channelId);
+                        if (processor != null) {
+                            hasProcessor = true;
+                            // Creates a new list because the returned collection is weak and if you remove all elements
+                            // from the multimap it will also remove from the returned collection
+                            Collection<MeasurementWithConfig> measurementsWithConfig = newArrayList(enqueuedMeasurementsWithConfig.asMap().get(channelId));
+                            enqueuedMeasurementsWithConfig.removeAll(channelId);
+                            processor.process(measurementsWithConfig);
+                        }
                     }
 
-                    enqueuedMeasurementsWithConfig.removeAll(channelId);
-                    processor.process(measurementsWithConfig);
+                    if (!hasProcessor) {
+                        sleep();
+                    }
                 }
             } catch (InterruptedException e) {
             }
@@ -111,36 +117,26 @@ public class Agent {
     }
 
     public void send(Measurement measurement, Config config) {
-        MeasurementWithConfig measurementWithConfig = new MeasurementWithConfig(measurement, config);
-
-        Processor processorAlreadyBoundToChannelId = processorPool.getProcessor(measurement.getId());
-        if (processorAlreadyBoundToChannelId != null) {
-            processorAlreadyBoundToChannelId.process(measurementWithConfig);
-            return;
+        synchronized (enqueuedMeasurementsWithConfig) {
+            MeasurementWithConfig measurementWithConfig = new MeasurementWithConfig(measurement, config);
+            enqueuedMeasurementsWithConfig.put(measurement.getId(), measurementWithConfig);
         }
-
-        enqueuedMeasurementsWithConfig.put(measurement.getId(), measurementWithConfig);
     }
 
     public void send(Collection<Measurement> measurements, Config config) {
-        Map<String, List<Measurement>> measurementGroups = measurements
-                .parallelStream()
-                .collect(Collectors.groupingBy(Measurement::getId));
+        synchronized (enqueuedMeasurementsWithConfig) {
+            Map<String, List<Measurement>> measurementGroups = measurements
+                    .parallelStream()
+                    .collect(Collectors.groupingBy(Measurement::getId));
 
-        measurementGroups.forEach((channelId, measurementsForChannelId) -> {
-            List<MeasurementWithConfig> measurementsWithConfig = measurementsForChannelId
-                    .stream()
-                    .map(measurement -> new MeasurementWithConfig(measurement, config))
-                    .collect(Collectors.toList());
-
-            Processor processorAlreadyBoundToChannelId = processorPool.getProcessor(channelId);
-            if (processorAlreadyBoundToChannelId != null) {
-                processorAlreadyBoundToChannelId.process(measurementsWithConfig);
-                return;
-            }
-
-            enqueuedMeasurementsWithConfig.putAll(channelId, measurementsWithConfig);
-        });
+            measurementGroups.forEach((channelId, measurementsForChannelId) -> {
+                List<MeasurementWithConfig> measurementsWithConfig = measurementsForChannelId
+                        .stream()
+                        .map(measurement -> new MeasurementWithConfig(measurement, config))
+                        .collect(Collectors.toList());
+                enqueuedMeasurementsWithConfig.putAll(channelId, measurementsWithConfig);
+            });
+        }
     }
 
     public void reportSentMeasurement(Measurement measurement, CloseableHttpResponse response) {

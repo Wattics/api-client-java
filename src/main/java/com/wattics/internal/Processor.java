@@ -1,9 +1,6 @@
 package com.wattics.internal;
 
-import com.wattics.Agent;
-import com.wattics.ClientFactory;
-import com.wattics.Config;
-import com.wattics.Measurement;
+import com.wattics.*;
 import org.apache.http.client.methods.CloseableHttpResponse;
 
 import java.io.IOException;
@@ -11,17 +8,15 @@ import java.util.Collection;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.Semaphore;
 
-import static java.lang.System.err;
-
 public class Processor implements Runnable {
     private final Semaphore canConsumeSemaphore;
-    private Agent agent;
+    private CanReportSentMeasurement reporter;
     private Client client;
-    private PriorityBlockingQueue<MeasurementWithConfig> measurementsWithConfig;
+    public PriorityBlockingQueue<MeasurementWithConfig> measurementsWithConfig;
     private boolean isSending = false;
 
-    Processor(Agent agent) {
-        this.agent = agent;
+    public Processor(CanReportSentMeasurement reporter) {
+        this.reporter = reporter;
         this.client = ClientFactory.getInstance().createClient();
         this.measurementsWithConfig = new PriorityBlockingQueue<>();
         canConsumeSemaphore = new Semaphore(0);
@@ -61,8 +56,8 @@ public class Processor implements Runnable {
                     try {
                         CloseableHttpResponse response = client.send(measurement, config);
 
-                        if (agent != null) {
-                            agent.reportSentMeasurement(measurement, response);
+                        if (reporter != null) {
+                            reporter.reportSentMeasurement(measurement, response);
                         }
 
                         if (response != null && response.getStatusLine().getStatusCode() >= 400) {
