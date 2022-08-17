@@ -3,7 +3,7 @@ package com.wattics;
 public class Config {
     public enum Environment {
         PRODUCTION("https://web-collector.wattics.com/measurements/v2/"),
-        DEVELOPMENT("https://dev-web-collector.wattics.com/measurements/v2/"),
+        DEVELOPMENT("https://demo-dc.wattics.com/measurements/v2/"),
         LOCAL("http://localhost:8080/measurements/v2/");
 
         private String uri;
