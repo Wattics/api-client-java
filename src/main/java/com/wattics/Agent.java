@@ -25,6 +25,7 @@ public class Agent implements CanReportSentMeasurement {
     private final ListMultimap<String, MeasurementWithConfig> enqueuedMeasurementsWithConfig;
     private final BlockingQueue<Object[]> sentMeasurementsWithContext;
     private final List<BiConsumer<Measurement, CloseableHttpResponse>> measurementSentHandlerList;
+    private long lastMeasurementSentTime;
 
     public static synchronized Agent getInstance() {
         return getInstance(0);
@@ -51,6 +52,7 @@ public class Agent implements CanReportSentMeasurement {
         enqueuedMeasurementsWithConfig = synchronizedListMultimap(LinkedListMultimap.create());
         sentMeasurementsWithContext = new LinkedBlockingQueue<>();
         measurementSentHandlerList = new CopyOnWriteArrayList<BiConsumer<Measurement, CloseableHttpResponse>>();
+        lastMeasurementSentTime = 0;
         startProcessorFeeder();
         startMeasurementSentHandlerDispatcher();
     }
@@ -141,6 +143,14 @@ public class Agent implements CanReportSentMeasurement {
 
     public void reportSentMeasurement(Measurement measurement, CloseableHttpResponse response) {
         sentMeasurementsWithContext.add(new Object[]{measurement, response});
+    }
+
+    public void setLastMeasurementSentTime(long time) {
+        lastMeasurementSentTime = time;
+    }
+
+    public long getLastMeasurementSentTime() {
+        return lastMeasurementSentTime;
     }
 
     public MeasurementSentHandler addMeasurementSentHandler(BiConsumer<Measurement, CloseableHttpResponse> handler) {
