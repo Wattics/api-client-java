@@ -1,9 +1,9 @@
 apply plugin: 'java-library'
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 group = 'com.wattics'
-version = '0.5.0'
-sourceCompatibility = 1.8
+version = '1.0.0'
+sourceCompatibility = 17
 
 repositories {
     jcenter()
@@ -11,14 +11,25 @@ repositories {
 
 dependencies {
     api 'org.apache.commons:commons-math3:3.6.1'
-    implementation 'com.google.guava:guava:23.0'
-    compile 'com.google.code.gson:gson:1.7.2'
-    compile 'org.apache.httpcomponents:httpclient:4.3.4'
-    testCompile 'junit:junit:4.12'
+    implementation 'com.google.guava:guava:32.1.2-jre'
+    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.14'
+    testImplementation 'junit:junit:4.12'
 }
 
 task fatJar(type: Jar) {
     baseName = project.name
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            group = 'com.wattics'
+            version = '1.0.0'
+
+            from components.java
+        }
+    }
 }
