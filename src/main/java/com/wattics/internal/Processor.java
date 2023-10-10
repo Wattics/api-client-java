@@ -5,6 +5,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Date;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.Semaphore;
 
@@ -58,6 +59,7 @@ public class Processor implements Runnable {
 
                         if (reporter != null) {
                             reporter.reportSentMeasurement(measurement, response);
+                            reporter.setLastMeasurementSentTime((new Date()).getTime());
                         }
 
                         if (response != null && response.getStatusLine().getStatusCode() >= 400) {
